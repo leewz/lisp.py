@@ -168,7 +168,7 @@ class LISPSCOPE(Scope):
         scp = scope
         while isinstance(scp, LISPSCOPE):
             try:
-                return _getkey(scp, val)
+                return _getkey(scp.d, val)
             except KeyError: pass
             scp = scp.parent
         return _getkey(scp, val) #last try
