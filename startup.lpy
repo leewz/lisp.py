@@ -1,0 +1,12 @@
+(= 'fn function)
+(= 'map
+    (fn (f lst)
+        (if (nil? lst)
+            nil
+            (cons
+                (f (car lst))
+                (map f (cdr lst))
+)   )   )   )
+
+
+
