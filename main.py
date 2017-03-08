@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 
+import sys
 from read import READ, refresh
 from lisp import LISPSCOPE
 from debuggery import log
 import numerics
 
-if __name__ == '__main__':
-    # (LOOP (PRINT (EVAL (READ))))
-    scope = LISPSCOPE()
-    with open('startup.lpy') as f: #load the startup file.
+
+def readfile(scope, fname):
+    with open(fname) as f: #load the startup file.
         refresh(f)
         try:
             while True:
                 scope.EVAL(READ())
-        except StopIteration: pass
+        except StopIteration:
+            return
+
+def REPL(scope):
     refresh()
     while True:
         print('>>>', end=' ', flush=True)
@@ -26,4 +29,15 @@ if __name__ == '__main__':
         else:
             print('=>', end=' ')
             scope.PRINT(result)
+
+
+if __name__ == '__main__':
+    # (LOOP (PRINT (EVAL (READ))))
+    scope = LISPSCOPE()
+    readfile(scope, 'startup.lpy')
+    if len(sys.argv) == 1:
+        REPL(scope)
+    else:
+        readfile(scope, sys.argv[1])
+
 
