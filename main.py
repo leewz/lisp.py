@@ -3,7 +3,7 @@
 from read import READ, refresh
 from lisp import LISPSCOPE
 from debuggery import log
-
+import numerics
 
 if __name__ == '__main__':
     # (LOOP (PRINT (EVAL (READ))))
