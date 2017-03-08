@@ -16,7 +16,7 @@ if __name__ == '__main__':
         except StopIteration: pass
     refresh()
     while True:
-        print('>>>', end=' ')
+        print('>>>', end=' ', flush=True)
         val = READ()
         log('READ:', scope.tostr(val))
         try:
