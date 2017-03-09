@@ -24,7 +24,6 @@ def READ(end=''):
     elif c in readtable:
         val = readtable[c](end)
     else: #Anything else.
-        #stream.putback(c)
         val = read_SYMBOL(c, end)
     if val is None:
         return READ(end) #try again.
@@ -44,7 +43,6 @@ def read_SYMBOL(s, end):
     """
     log('read_SYMBOL', s, end)
     for c in stream:
-        #! Be careful about reading too far.
         if c.isspace():
             break
         if c in end:
@@ -67,12 +65,10 @@ def read_LIST(end):
     val = READ(end)
     if val is None:
         return NIL
-    elif val is SYMBOL('.'):
-        #return read_LIST(end)
-        cdr = READ(end) #expects a ')' right after.
-        assert READ(end) is None
+    elif val is SYMBOL('.'): # CONS expression.
+        cdr = READ(end)
+        assert cdr is not None and READ(end) is None, "Expected exactly one item after a dot."
         return cdr
-        #? How should I specify "expects this after"?
     else:
         return CONS(val, read_LIST(end))
 
@@ -102,7 +98,7 @@ def read_STRING(end):
 
 @register(readtable, '#')
 def read_POUND(end):
-    ...
+    raise NotImplementedError
 
 
 def istream(file):
