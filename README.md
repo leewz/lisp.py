@@ -19,7 +19,8 @@ Semantics:
 - This implementation is a [Lisp-1](http://stackoverflow.com/questions/4578574/what-is-the-difference-between-lisp-1-and-lisp-2), meaning functions and variables share the same namespace.
 
 These functions are defined within the Python code:
-- (READ): Read a single value from standard input.
+- (READ): Read and parse a single object from standard input.
+- (READ string): Parse a string into an object.
 - (EVAL expr): Evaluate an item.
     - Symbols evaluate to their value in scope.
     - Lists evaluate as function/macro calls.
