@@ -17,7 +17,7 @@ def readfile(scope, fname):
             return
 
 def REPL(scope):
-    refresh()
+    refresh(sys.stdin)
     while True:
         print('>>>', end=' ', flush=True)
         val = READ()

@@ -1,4 +1,3 @@
-import sys
 from iterutil import peekiter
 from lisptypes import SYMBOL, CONS, NIL
 from dictutil import register
@@ -106,10 +105,9 @@ def istream(file):
         yield from line
 
 
-def refresh(file=None):
+def refresh(file):
     global stream
-    stream = peekiter(istream(file or sys.stdin))
+    stream = peekiter(istream(file))
 
-refresh()
 
 
