@@ -7,6 +7,16 @@
                 (f (car lst))
                 (map f (cdr lst))
 )   )   )   )
+(= 'list
+  ;(fn args args)
+  (fn (first . rest) (cons first rest))
+)
+(= 'defun
+  (macro (name params body)
+    (list '= (list quote name) (list 'fn params body))
+) )
 
-
-
+;(= 'add (fn (a b) (+ a b))
+(defun add (a b) (+ a b))
+(defun sum (args) (if (nil? args) 0 (+ (car args) (sum (cdr args)))))
+(print (sum '(1 2)))

@@ -55,19 +55,32 @@ class LISPSCOPE(Scope):
             head = CAR(val)
             tail = CDR(val)
             f = scope.EVAL(head)
-            return scope.APPLY(f, tail)
+            return scope.callthing(f, tail)
         #??
+        if callable(val):
+            return val
         assert False
 
-    def APPLY(scope, f, args):
+    def callthing(scope, f, args):
         if not isMACRO(f):
             # Evaluate the args.
             args = scope.map(scope.EVAL, args)
-        rv = scope.callmacro(f, args)
-        if rv is None:
+        rv = scope.docall(f, args)
+        if isMACRO(f) and not callable(f):
+            rv = scope.EVAL(rv)
+        if rv is None or rv is False:
             return NIL
+        elif rv is True:
+            return T
         else:
             return rv
+
+    def docall(scope, f, args):
+        # Call without evaluating args.
+        if callable(f):
+            return f(*tolist(args))
+        return f.scope.WITH(f.params, args, f.body)
+            #! Does this leak outer params into the function call?
 
     def map(scope, f, lst):
         # Needed for argument evaluation.
@@ -75,13 +88,6 @@ class LISPSCOPE(Scope):
             return NIL
         assert istype(lst, CONS)
         return CONS(f(CAR(lst)), scope.map(f, CDR(lst)))
-
-    def callmacro(scope, f, args):
-        # Call without evaluating args.
-        if callable(f):
-            return f(*tolist(args))
-        return scope.WITH(f.params, args, f.body)
-            #! Does this leak outer params into the function call?
 
     def SETNAME(scope, sym, value):
         #? Is this scoped?
@@ -112,24 +118,21 @@ class LISPSCOPE(Scope):
     def WITH(scope, params, args, body):
         #? Is this "LABELS"?
         newscope = LISPSCOPE(scope)
-        newscope.assign(newscope, params, args)
+        newscope.assign(params, args)
         return newscope.EVAL(body)
 
     def assign(scope, params, args):
         if NILP(params):
             assert NILP(args)
-            return
-        param = CAR(params)
-        arg = CAR(args)
-        if isSYMBOL(param):
-            scope[param.value.upper()] = arg
-        else: # recursive unpacking
-            scope.assign(param, arg)
-        scope.assign(CDR(params), CDR(args))
+        elif istype(params, SYMBOL):
+            scope[params.value.upper()] = args
+        else:
+            scope.assign(CAR(params), CAR(args))
+            scope.assign(CDR(params), CDR(args))
 
     @macro
     def IF(scope, condition, then, otherwise=None):
-        if not scope.NILP(scope.EVAL(condition)):
+        if not NILP(scope.EVAL(condition)):
             return scope.EVAL(then)
         elif otherwise is not None:
             return scope.EVAL(otherwise)

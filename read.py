@@ -22,7 +22,7 @@ def READ(end=''):
     if c in end:
         return None
     elif c in readtable:
-        val = readtable[c]()
+        val = readtable[c](end)
     else: #Anything else.
         #stream.putback(c)
         val = read_SYMBOL(c, end)
@@ -60,26 +60,30 @@ def read_SYMBOL(s, end):
 
 
 @register(readtable, "(")
-def read_LIST():
+def read_LIST(end):
     log("read_LIST")
     # a list is a cons cell chain
-    val = READ(')')
+    end = set(end) | set(')')
+    val = READ(end)
     if val is None:
         return NIL
-    elif val == '.':
-        return READ(')') #expects a ')' right after.
+    elif val is SYMBOL('.'):
+        #return read_LIST(end)
+        cdr = READ(end) #expects a ')' right after.
+        assert READ(end) is None
+        return cdr
         #? How should I specify "expects this after"?
     else:
-        return CONS(val, read_LIST())
+        return CONS(val, read_LIST(end))
 
 
 @register(readtable, "'")
-def read_QUOTE():
-    return CONS(SYMBOL('QUOTE'), CONS(READ(), NIL))
+def read_QUOTE(end):
+    return CONS(SYMBOL('QUOTE'), CONS(READ(end), NIL))
 
 
 @register(readtable, ";")
-def read_COMMENT():
+def read_COMMENT(end):
     for c in stream:
         if c == '\n':
             break
@@ -87,7 +91,7 @@ def read_COMMENT():
 
 
 @register(readtable, '"')
-def read_STRING():
+def read_STRING(end):
     s = ''
     for c in stream:
         if c == '"':
@@ -97,7 +101,7 @@ def read_STRING():
 
 
 @register(readtable, '#')
-def read_POUND():
+def read_POUND(end):
     ...
 
 
