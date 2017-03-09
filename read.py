@@ -11,41 +11,50 @@ __all__ = [
 readtable = {
 }
 
-def READ(end=''):
+
+def READ(src=None):
     """ Reads a string and returns a parsed Lisp value.
     """
+    if src is None:
+        src = stream
+    else:
+        src = peekiter(istream(src))
+    return _read(src)
+
+
+def _read(itr, end=''):
     #. Eat leading spaces.
-    skip_spaces()
-    c = next(stream)
+    skip_spaces(itr)
+    c = next(itr)
     log("C", c)
     if c in end:
         return None
     elif c in readtable:
-        val = readtable[c](end)
+        val = readtable[c](itr, end)
     else: #Anything else.
-        val = read_SYMBOL(c, end)
+        val = read_SYMBOL(itr, c, end)
     if val is None:
-        return READ(end) #try again.
+        return _read(itr, end) #try again.
     return val
 
 
-def skip_spaces():
-    while stream.peek().isspace():
-        next(stream)
+def skip_spaces(itr):
+    while itr.peek().isspace():
+        next(itr)
 
 
-def read_SYMBOL(s, end):
+def read_SYMBOL(itr, s, end):
     """ Read until space or something.
 
     s is what's already been read.
     Numbers are symbols, too.
     """
     log('read_SYMBOL', s, end)
-    for c in stream:
+    for c in itr:
         if c.isspace():
             break
         if c in end:
-            stream.putback(c)
+            itr.putback(c)
             break
         s += c
     log("SYMBOL", s)
@@ -57,38 +66,38 @@ def read_SYMBOL(s, end):
 
 
 @register(readtable, "(")
-def read_LIST(end):
+def read_LIST(itr, end):
     log("read_LIST")
     # a list is a cons cell chain
     end = set(end) | set(')')
-    val = READ(end)
+    val = _read(itr, end)
     if val is None:
         return NIL
     elif val is SYMBOL('.'): # CONS expression.
-        cdr = READ(end)
-        assert cdr is not None and READ(end) is None, "Expected exactly one item after a dot."
+        cdr = _read(itr, end)
+        assert cdr is not None and _read(itr, end) is None, "Expected exactly one item after a dot."
         return cdr
     else:
-        return CONS(val, read_LIST(end))
+        return CONS(val, read_LIST(itr, end))
 
 
 @register(readtable, "'")
-def read_QUOTE(end):
-    return CONS(SYMBOL('QUOTE'), CONS(READ(end), NIL))
+def read_QUOTE(itr, end):
+    return CONS(SYMBOL('QUOTE'), CONS(_read(itr, end), NIL))
 
 
 @register(readtable, ";")
-def read_COMMENT(end):
-    for c in stream:
+def read_COMMENT(itr, end):
+    for c in itr:
         if c == '\n':
             break
     return
 
 
 @register(readtable, '"')
-def read_STRING(end):
+def read_STRING(itr, end):
     s = ''
-    for c in stream:
+    for c in itr:
         if c == '"':
             break
         s += c
@@ -96,7 +105,7 @@ def read_STRING(end):
 
 
 @register(readtable, '#')
-def read_POUND(end):
+def read_POUND(itr, end):
     raise NotImplementedError
 
 
